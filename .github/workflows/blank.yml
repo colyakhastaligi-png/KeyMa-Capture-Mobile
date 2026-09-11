@@ -1,0 +1,44 @@
+name: KeyMa Capture APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kaynakları al
+        uses: actions/checkout@v4
+
+      - name: Projeyi ZIP'ten çıkar
+        run: |
+          ZIP=$(find . -maxdepth 1 -type f -name 'KeyMa-Capture-Mobile*.zip' | head -1)
+          echo "Kullanılan ZIP: $ZIP"
+          unzip -q "$ZIP" -d android-src
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: APK derle
+        working-directory: android-src/keyma_android_real
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: APK adını düzenle
+        run: |
+          cp android-src/keyma_android_real/app/build/outputs/apk/debug/app-debug.apk \
+          KeyMa-Capture-Mobile-v2.0.apk
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeyMa-Capture-Mobile-v2.0
+          path: KeyMa-Capture-Mobile-v2.0.apk
